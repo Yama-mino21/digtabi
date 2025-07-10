@@ -1,0 +1,996 @@
+<!DOCDOTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>DigTABI in HOKKAIDO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #FFF9E3;
+      color: #333;
+      font-family: 'Segoe UI', 'ヒラギノ角ゴ ProN', 'Meiryo', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .container {
+      background: #FFFBEA;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(255, 221, 51, 0.15);
+      padding: 32px 24px;
+      max-width: 420px;
+      width: 95%;
+      margin: 32px 0;
+      text-align: center;
+    }
+    h1 {
+      color: #FFD600;
+      margin-bottom: 24px;
+      font-size: 2em;
+      letter-spacing: 2px;
+    }
+    .btn {
+      background: #FFEB3B;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      padding: 22px 0;
+      margin: 8px 0;
+      width: 100%;
+      font-size: 1.3em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #FFF176;
+    }
+    .question {
+      font-size: 1.2em;
+      margin-bottom: 32px;
+    }
+    .select {
+      width: 90%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #FFD600;
+      margin-bottom: 24px;
+      font-size: 1em;
+    }
+    .region-btn {
+      background: #FFF9C4;
+      color: #333;
+      border: 1px solid #FFD600;
+      border-radius: 8px;
+      padding: 8px 18px;
+      margin: 8px 0;
+      width: auto;
+      font-size: 0.95em;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: inline-block;
+    }
+    .region-btn:hover {
+      background: #FFF176;
+    }
+    .result-title {
+      color: #333;
+      font-size: 1.3em;
+      margin-bottom: 12px;
+    }
+    .result-desc {
+      font-size: 1em;
+      margin-bottom: 16px;
+    }
+    .result-img {
+      width: 100%;
+      max-width: 320px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(255, 221, 51, 0.15);
+    }
+    .access-title {
+      color: #FFD600;
+      font-weight: bold;
+      margin-top: 16px;
+      margin-bottom: 4px;
+    }
+    .restart-btn {
+      background: #FFF9C4;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .near-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .near-list li {
+      margin: 6px 0;
+      color: #333;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.98em;
+    }
+    .near-list li:hover {
+      color: #FFD600;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 16px 4px;
+      }
+      h1 {
+        font-size: 1.3em;
+      }
+      .btn {
+        font-size: 1.1em;
+        padding: 16px 0;
+      }
+    }
+    .header {
+      width: 100%;
+      background: #FFD600;
+      color: #333;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0 4px 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      transform: translateY(-100%);
+      transition: transform 0.3s;
+    }
+    .header.show {
+      transform: translateY(0);
+    }
+    .header-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-nav-btn {
+      background: none;
+      border: none;
+      color: #333;
+      font-weight: bold;
+      font-size: 1em;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .header-nav-btn:hover {
+      background: #FFF9C4;
+    }
+    .footer {
+      width: 100%;
+      background: #FFFDE7;
+      color: #333;
+      text-align: center;
+      padding: 18px 0 10px 0;
+      margin-top: 32px;
+      font-size: 0.98em;
+      border-top: 1px solid #FFD600;
+    }
+    .footer-link {
+      color: #FFD600;
+      text-decoration: underline;
+      margin: 0 8px;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      .header-nav-btn { font-size: 0.95em; padding: 5px 6px; }
+      .footer { font-size: 0.93em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app"></div>
+  <script>
+    // 市町村サンプル（実際はもっと増やせます）
+    const cities = [
+      "札幌市", "旭川市", "函館市", "帯広市", "釧路市", "小樽市", "北見市", "室蘭市", "苫小牧市", "稚内市"
+    ];
+
+    // スポットデータ
+    const spots = [
+      {
+        name: "オンネトー（足寄町）",
+        region: "道東",
+        image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
+        description: "雌阿寒岳・阿寒富士を背景にしたエメラルドブルーの湖。手つかずの原生林の散策路や、世界的にも珍しい温泉の滝、多種多彩な動植物が楽しめます。",
+        seasons: ["夏"]
+      },
+      {
+        name: "奥尻島（奥尻町）",
+        region: "道南",
+        image: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=600&q=80",
+        description: "奇岩絶壁に富んだ海岸線と奥尻ブルーの海、美しい星空も楽しめる離島。",
+        seasons: ["夏"]
+      },
+      {
+        name: "江差いにしえ街道（江差町）",
+        region: "道南",
+        image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=600&q=80",
+        description: "ニシン漁で栄えた面影を残す歴史街道。江戸～明治期の蔵や商家、社寺が並び、幕末の軍艦「開陽丸記念館」も。",
+        seasons: ["夏"]
+      },
+      {
+        name: "アルテピアッツァ美唄（美唄市）",
+        region: "道央",
+        image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80",
+        description: "彫刻家・安田侃による美術館。彫刻作品に触れて楽しめ、ワークショップも開催。",
+        seasons: ["夏"]
+      },
+      {
+        name: "羅臼湖トレッキング（羅臼町）",
+        region: "道東",
+        image: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=600&q=80",
+        description: "亜高山帯のトレッキングツアー。高山植物やハイマツ帯、「逆さ羅臼岳」など北海道屈指の絶景。",
+        seasons: ["夏"]
+      },
+      {
+        name: "屈斜路湖・和琴半島（弟子屈町）",
+        region: "道東",
+        image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
+        description: "日本最大のカルデラ湖。カヌーやSUP、キャンプ、砂湯温泉など大自然を満喫。",
+        seasons: ["夏"]
+      },
+      {
+        name: "厚岸町",
+        region: "道東",
+        image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=600&q=80",
+        description: "国内唯一、通年生食用カキを販売。カキの食べ比べや乳製品、厚岸ウイスキーも魅力。",
+        seasons: ["夏"]
+      },
+      {
+        name: "士別市",
+        region: "道北",
+        image: "https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=600&q=80",
+        description: "「羊のまち」。夏季限定サフォーク種ジンギスカンや、個性的な味付けも楽しめる。",
+        seasons: ["夏"]
+      },
+      {
+        name: "ファーム富田（中富良野町）",
+        region: "道央",
+        image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
+        description: "一面に広がるラベンダー畑が有名。夏には紫色の絶景が楽しめる。",
+        seasons: ["夏"]
+      },
+      {
+        name: "道の駅275つきがた（月形町）",
+        region: "道央",
+        image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
+        description: "リニューアルされた温泉「月形温泉ゆりかご」でリフレッシュできる。",
+        seasons: ["春","夏","秋","冬"]
+      },
+    ];
+
+    // 1. 各イベントデータにidプロパティを追加
+    const events = [
+      {
+        id: "event1",
+        name:"天狗の火渡り 神社祭り（琴平神社例大祭）",
+        startDate:"2025-07-12",
+        endDate:"2025-07-14",
+        place:"古平町",
+        description:"大漁と海の安全を祈願する古平町の一大イベント。約3mにもなる火柱のなかを猿田彦が勇壮に火渡りをする。",
+        image:"https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: "event2",
+        name:"第14回 小樽がらす市",
+        startDate:"2025-07-26",
+        endDate:"2025-07-28",
+        place:"小樽市旧国鉄手宮線",
+        description:"小樽の夏を鮮やかに彩る風物詩。ガラス製品の展示販売や制作体験が行われる。風鈴の涼やかな音色がお出迎え。",
+        image:"https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: "event3",
+        name:"野外慈善ビールパーティー",
+        startDate:"2025-07-27",
+        endDate:"2025-07-27",
+        place:"新十津川町北中央公園",
+        description:"用意されるビールの量は5000リットル!焼き鳥やおでんなど露店が数多くならび、こども縁日などお子様連れでも楽しめる。クライマックスには花火も打ち上げられる。",
+        image:"https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: "event4",
+        name:"洞爺夏まつり",
+        date:"2025-07-27",
+        place:"洞爺湖町とうや水の駅ふれあい中央広場",
+        description:"絢爛豪華な「ちょうさ（太鼓台）」が町内を練り歩く。",
+        image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80"
+      }
+    ];
+
+    // 2. 日付表示用関数
+    function formatEventDate(event) {
+      if (event.startDate && event.endDate) {
+        return `${event.startDate} 〜 ${event.endDate}`;
+      }
+      if (event.date) {
+        return event.date;
+      }
+      return "";
+    }
+
+    // 診断ツリー
+    const quizData = {
+      question: "次の休み、どんな気分で過ごしたい？",
+      choices: [
+        {
+          text: "のんびり、心を癒す旅がしたい",
+          next: {
+            question: "どんな癒しを求めてる？",
+            choices: [
+              {
+                text: "人のいない大自然に、どっぷりつかりたい",
+                next: {
+                  question: "目の前に広がるなら、どっちの景色？",
+                  choices: [
+                    {
+                      text: "神秘的な湖や、どこまでも続く湿原",
+                      result: "オンネトー（足寄町）"
+                    },
+                    {
+                      text: "険しい山やドラマチックな海岸線",
+                      result: "奥尻島（奥尻町）"
+                    }
+                  ]
+                }
+              },
+              {
+                text: "静かな街で、ゆったりとした時間を過ごしたい",
+                next: {
+                  question: "心惹かれるのは、どんな街並み？",
+                  choices: [
+                    {
+                      text: "レトロな建物が並ぶ、歴史を感じる街",
+                      result: "江差いにしえ街道（江差町）"
+                    },
+                    {
+                      text: "アートや建築が溶け込む、洗練された空間",
+                      result: "アルテピアッツァ美唄（美唄市）"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          text: "とにかく、アクティブに楽しみたい",
+          next: {
+            question: "どうやって「アクティブ」になる？",
+            choices: [
+              {
+                text: "全身で自然を感じる、アウトドア体験がしたい",
+                next: {
+                  question: "冒険の舞台は、山と海、どっち？",
+                  choices: [
+                    {
+                      text: "緑豊かな山や森",
+                      result: "羅臼湖トレッキング（羅臼町）"
+                    },
+                    {
+                      text: "青い海や湖",
+                      result: "屈斜路湖・和琴半島（弟子屈町）"
+                    }
+                  ]
+                }
+              },
+              {
+                text: "「食」で未知の体験！ご当地グルメを開拓したい",
+                next: {
+                  question: "どっちの「幸」を味わい尽くす？",
+                  choices: [
+                    {
+                      text: "新鮮な「海の幸」",
+                      result: "厚岸町"
+                    },
+                    {
+                      text: "めぐみのある「山の幸」",
+                      result: "士別市"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    // 状態管理
+    let state = {
+      mode: null, // "region" or "quiz"
+      selectedRegion: null,
+      selectedCity: null,
+      quizNode: null
+    };
+
+    const app = document.getElementById('app');
+
+    // Google Mapsリンク生成
+    function getGoogleMapsLink(from, to) {
+      return `https://www.google.com/maps/dir/${encodeURIComponent(from)}/${encodeURIComponent(to)}/`;
+    }
+
+    // 画面描画
+    function renderTop() {
+      state = { mode: null, selectedRegion: null, selectedCity: null, quizNode: null };
+      const specialSpot = spots.find(s => s.name === "ファーム富田（中富良野町）");
+      // 直近イベント抽出
+      const today = new Date();
+      const upcoming = events.filter(e => {
+        const end = e.endDate ? new Date(e.endDate) : (e.date ? new Date(e.date) : null);
+        return end && end >= today;
+      })
+      .sort((a, b) => {
+        const aStart = a.startDate ? new Date(a.startDate) : (a.date ? new Date(a.date) : null);
+        const bStart = b.startDate ? new Date(b.startDate) : (b.date ? new Date(b.date) : null);
+        return aStart - bStart;
+      })
+      .slice(0, 3);
+      app.innerHTML = `
+        <h1>DigTABI in HOKKAIDO</h1>
+        <div style="margin-bottom:24px;">見つけよう、まだ知らない、記憶に残るまち。</div>
+        <button class="btn" onclick="selectMode('quiz')">気分で探す（診断）</button>
+        <div style="margin:16px 0 0 0;">
+          <button class="region-btn" onclick="selectMode('region')">地域で探す</button>
+          <button class="region-btn" onclick="renderSeasonSelect()">季節で探す</button>
+          <button class="region-btn" onclick="renderFavorites()">お気に入り一覧</button>
+          <button class="region-btn" onclick="renderAIComingSoon()">AIに相談</button>
+        </div>
+        <div style=\"margin:18px 0 18px 0;\">
+          <input id=\"searchInput\" type=\"text\" placeholder=\"スポット名で検索\" style=\"width:70%;padding:8px;border-radius:8px;border:1px solid #FFD600;font-size:1em;\">
+          <button class=\"region-btn\" style=\"padding:8px 16px;margin-left:8px;\" onclick=\"searchSpots()\">検索</button>
+          <div id=\"searchResult\"></div>
+        </div>
+        <div style="margin:32px 0 0 0; padding:16px; background:#FFFDE7; border-radius:12px; box-shadow:0 2px 8px rgba(255,221,51,0.07);">
+          <div style="color:#FFD600;font-weight:bold;margin-bottom:8px;font-size:1.1em;">ピックアップ</div>
+          <img src="${specialSpot.image}" alt="${specialSpot.name}" style="width:100%;max-width:220px;border-radius:8px;margin-bottom:8px;box-shadow:0 1px 4px rgba(255,221,51,0.08);">
+          <div style="font-weight:bold;margin-bottom:4px;cursor:pointer;text-decoration:underline;" onclick="showSpotDetailByName('${specialSpot.name}')">${specialSpot.name}</div>
+          <div style="font-size:0.97em;">${specialSpot.description}</div>
+        </div>
+        <div style="margin:24px 0 0 0; padding:16px; background:#FFFDE7; border-radius:12px; box-shadow:0 2px 8px rgba(255,221,51,0.07);">
+          <div style="color:#FFD600;font-weight:bold;margin-bottom:8px;font-size:1.1em;">イベント</div>
+          ${typeof upcoming !== 'undefined' && upcoming.length === 0 ? '<div>現在予定されているイベントはありません。</div>' :
+            typeof upcoming !== 'undefined' ? upcoming.map(e => `
+              <div style=\"margin-bottom:24px; text-align:left;\">
+                <div style=\"font-weight:bold;font-size:1.08em;cursor:pointer;text-decoration:underline;\" onclick=\"renderEventDetail('${e.id}')\">${e.name}</div>
+                <div style=\"margin:4px 0 0 0; color:#666;\">${formatEventDate(e)}</div>
+                <div style=\"margin:2px 0 0 0; color:#666;\">${e.place}</div>
+                <div style=\"margin:8px 0 0 0;\">${e.description}</div>
+                ${e.image ? `<img src=\"${e.image}\" alt=\"${e.name}\" style=\"width:100%;max-width:320px;border-radius:8px;margin:10px 0 0 0;box-shadow:0 1px 4px rgba(255,221,51,0.08);cursor:pointer;\" onclick=\"renderEventDetail('${e.id}')\">` : ''}
+              </div>
+            `).join('') : ''}
+        </div>
+        <div style="text-align:center;margin-top:8px;"><button class="region-btn" onclick="renderAllEvents()">さらに表示</button></div>
+      `;
+    }
+
+    window.selectMode = function(mode) {
+      state.mode = mode;
+      renderCitySelect();
+    };
+
+    function renderCitySelect() {
+      app.innerHTML = `
+        <h1>DigTABI in HOKKAIDO</h1>
+        <div style="margin-bottom:16px;">出発地（市町村）を選択してください</div>
+        <select class="select" id="citySelect">
+          <option value="">選択してください</option>
+          ${cities.map(city => `<option value="${city}">${city}</option>`).join('')}
+        </select>
+        <div style="margin:16px 0;">
+          <button class="btn" style="font-size:1.1em;padding:12px 0;" onclick="proceedFromCity()">次へ</button>
+        </div>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+    }
+
+    window.proceedFromCity = function() {
+      const city = document.getElementById('citySelect').value;
+      if (!city) {
+        alert("出発地を選択してください");
+        return;
+      }
+      state.selectedCity = city;
+      if (state.mode === "region") {
+        renderRegionSelect();
+      } else {
+        state.quizNode = quizData;
+        renderQuiz(state.quizNode);
+      }
+    };
+
+    function renderRegionSelect() {
+      app.innerHTML = `
+        <h1>DigTABI in HOKKAIDO</h1>
+        <div style="margin-bottom:16px;">地域を選択してください</div>
+        <button class="region-btn" onclick="selectRegion('道北')">道北</button>
+        <button class="region-btn" onclick="selectRegion('道東')">道東</button>
+        <button class="region-btn" onclick="selectRegion('道央')">道央</button>
+        <button class="region-btn" onclick="selectRegion('札幌近郊')">札幌近郊</button>
+        <button class="region-btn" onclick="selectRegion('道南')">道南</button>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+    }
+
+    window.selectRegion = function(region) {
+      state.selectedRegion = region;
+      renderRegionResult();
+    };
+
+    function renderRegionResult() {
+      // 選択地域のスポットを抽出
+      let regionSpots = spots.filter(s => s.region === state.selectedRegion);
+      if (state.selectedRegion === "札幌近郊") {
+        // 例として道央の一部を札幌近郊に割り当て
+        regionSpots = spots.filter(s => s.region === "道央");
+      }
+      if (regionSpots.length === 0) {
+        app.innerHTML = `
+          <h1>DigTABI in HOKKAIDO</h1>
+          <div>この地域のスポット情報はまだありません。</div>
+          <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+        `;
+        return;
+      }
+      // ランダムで1件表示
+      const spot = regionSpots[Math.floor(Math.random() * regionSpots.length)];
+      renderResult(spot);
+      header.classList.add('show');
+    }
+
+    function renderQuiz(node) {
+      app.innerHTML = `
+        <h1>DigTABI in HOKKAIDO</h1>
+        <div class="question">${node.question}</div>
+        <button class="btn" onclick="chooseQuiz(0)">${node.choices[0].text}</button>
+        <button class="btn" onclick="chooseQuiz(1)">${node.choices[1].text}</button>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+      if (typeof header !== 'undefined' && header.classList) header.classList.add('show');
+      window.scrollTo({top: 0});
+    }
+
+    window.chooseQuiz = function(index) {
+      const choice = state.quizNode.choices[index];
+      if (choice.result) {
+        // スポット名で検索
+        const spot = spots.find(s => s.name === choice.result);
+        renderResult(spot);
+      } else if (choice.next) {
+        state.quizNode = choice.next;
+        renderQuiz(state.quizNode);
+      }
+    };
+
+    // 近くのスポットクリックで詳細表示
+    window.showSpotDetailByName = function(name) {
+      const spot = spots.find(s => s.name === name);
+      renderSpotDetail(spot);
+    };
+
+    // お気に入り管理用関数
+    function getFavorites() {
+      return JSON.parse(localStorage.getItem('favorites') || '[]');
+    }
+    function setFavorites(favs) {
+      localStorage.setItem('favorites', JSON.stringify(favs));
+    }
+    function isFavorite(spotName) {
+      return getFavorites().includes(spotName);
+    }
+    function toggleFavorite(spotName) {
+      let favs = getFavorites();
+      if (favs.includes(spotName)) {
+        favs = favs.filter(n => n !== spotName);
+      } else {
+        favs.push(spotName);
+      }
+      setFavorites(favs);
+    }
+
+    // お気に入り一覧画面
+    function renderFavorites() {
+      const favs = getFavorites();
+      const favSpots = spots.filter(s => favs.includes(s.name));
+      app.innerHTML = `
+        <h1>お気に入りスポット</h1>
+        ${favSpots.length === 0 ? '<div>お気に入りはありません。</div>' :
+          '<ul class="near-list">' + favSpots.map(s => `
+            <li style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="showSpotDetailByName('${s.name.replace(/'/g, "\\'")}')">
+              <img src="${s.image}" alt="${s.name}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;box-shadow:0 1px 4px rgba(255,221,51,0.08);">
+              <span>${s.name}</span>
+            </li>
+          `).join('') + '</ul>'}
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+    }
+
+    // renderResult関数にお気に入りボタン追加
+    function renderResult(spot) {
+      const mapsUrl = getGoogleMapsLink(state.selectedCity, spot.name);
+      const nearSpots = spots.filter(s => s.region === spot.region && s.name !== spot.name);
+      const fav = isFavorite(spot.name);
+      const shareText = encodeURIComponent(`DigTABI in HOKKAIDOで見つけた！\n${spot.name}\n${spot.description}\n${mapsUrl}`);
+      const shareUrlX = `https://twitter.com/intent/tweet?text=${shareText}`;
+      const shareUrlFB = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(mapsUrl)}&quote=${shareText}`;
+
+      // --- オンネトー専用の宿泊施設情報を追加 ---
+       let hotelHtml = '';
+       if (spot.name === "オンネトー（足寄町）") {
+        hotelHtml = `
+          <div class="access-title" style="margin-top:20px;">おすすめ宿泊施設</div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px;">
+            <img src="https://www.lake-akan.com/wp-content/themes/lakeakan/images/hotel_akan.jpg" alt="阿寒湖温泉ホテル" style="width:100px;height:70px;object-fit:cover;border-radius:8px;box-shadow:0 1px 4px rgba(255,221,51,0.08);">
+            <div>
+              <div style="font-weight:bold;">阿寒湖温泉ホテル</div>
+              <a href="https://www.lake-akan.com/" target="_blank">
+                <button class="region-btn" style="margin-top:4px;">予約する</button>
+              </a>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <img src="https://www.tsuruga.com/images/top/mainvisual01.jpg" alt="あしょろ温泉ホテル" style="width:100px;height:70px;object-fit:cover;border-radius:8px;box-shadow:0 1px 4px rgba(255,221,51,0.08);">
+            <div>
+              <div style="font-weight:bold;">あしょろ温泉ホテル</div>
+              <a href="https://www.tsuruga.com/" target="_blank">
+                <button class="region-btn" style="margin-top:4px;">予約する</button>
+              </a>
+            </div>
+          </div>
+        `;
+      }
+
+      app.innerHTML = `
+        <h1>DigTABI in HOKKAIDO</h1>
+        <div class="result-title">${spot.name}</div>
+        <img class="result-img" src="${spot.image}" alt="${spot.name}">
+        <div class="result-desc">${spot.description}</div>
+        <button class="region-btn" style="margin-bottom:12px;" onclick="toggleFavoriteAndRerender('${spot.name}')">${fav ? 'お気に入り解除' : 'お気に入りに追加'}</button>
+        <div class="access-title">Google Mapsで行き方を見る</div>
+        <a href="${mapsUrl}" target="_blank" style="color:#FFD600;font-weight:bold;">${state.selectedCity} → ${spot.name}（Google Mapsで開く）</a>
+        ${hotelHtml}
+        <div style="margin:18px 0 0 0;">
+          <div style="color:#FFD600;font-weight:bold;margin-bottom:6px;">SNSでシェア</div>
+          <button class="region-btn" style="background:#E1306C;color:#fff;margin:0 4px 8px 0;" onclick="alert('Instagramは画像保存後、アプリからシェアしてください。')">Instagram</button>
+          <a class="region-btn" style="background:#1DA1F2;color:#fff;margin:0 4px 8px 0;display:inline-block;text-decoration:none;" href="${shareUrlX}" target="_blank">X（旧Twitter）</a>
+          <a class="region-btn" style="background:#4267B2;color:#fff;margin:0 4px 8px 0;display:inline-block;text-decoration:none;" href="${shareUrlFB}" target="_blank">Facebook</a>
+        </div>
+        ${nearSpots.length > 0 ? `
+          <div class="access-title" style="margin-top:20px;">近くのスポット</div>
+          <ul class="near-list">
+            ${nearSpots.map(ns => `<li onclick="showSpotDetailByName('${ns.name.replace(/'/g, "\\'")}')">${ns.name}</li>`).join('')}
+          </ul>
+        ` : ''}
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+      header.classList.add('show');
+    }
+    window.toggleFavoriteAndRerender = function(spotName) {
+      toggleFavorite(spotName);
+      const spot = spots.find(s => s.name === spotName);
+      renderResult(spot);
+    };
+
+    // レビュー取得・保存・削除関数
+    function getReviews(spotName) {
+      return JSON.parse(localStorage.getItem('reviews_' + spotName) || '[]');
+    }
+    function addReview(spotName, name, comment, rating) {
+      const reviews = getReviews(spotName);
+      reviews.unshift({ name, comment, rating, date: new Date().toLocaleString() });
+      localStorage.setItem('reviews_' + spotName, JSON.stringify(reviews));
+    }
+    function deleteReview(spotName, index) {
+      const reviews = getReviews(spotName);
+      reviews.splice(index, 1);
+      localStorage.setItem('reviews_' + spotName, JSON.stringify(reviews));
+    }
+
+    // スター表示用関数
+    function renderStars(rating) {
+      return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    }
+
+    // スポット詳細ページ描画関数（レビュー機能強化）
+    function renderSpotDetail(spot) {
+      const mapsUrl = getGoogleMapsLink(state.selectedCity || '札幌市', spot.name);
+      const fav = isFavorite(spot.name);
+      const shareText = encodeURIComponent(`DigTABI in HOKKAIDOで見つけた！\n${spot.name}\n${spot.description}\n${mapsUrl}`);
+      const shareUrlX = `https://twitter.com/intent/tweet?text=${shareText}`;
+      const shareUrlFB = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(mapsUrl)}&quote=${shareText}`;
+      const reviews = getReviews(spot.name);
+      app.innerHTML = `
+        <h1>スポット詳細</h1>
+        <div class="result-title">${spot.name}</div>
+        <img class="result-img" src="${spot.image}" alt="${spot.name}">
+        <div class="result-desc">${spot.description}</div>
+        <button class="region-btn" style="margin-bottom:12px;" onclick="toggleFavoriteAndRerenderDetail('${spot.name}')">${fav ? 'お気に入り解除' : 'お気に入りに追加'}</button>
+        <div class="access-title">Google Mapsで行き方を見る</div>
+        <a href="${mapsUrl}" target="_blank" style="color:#FFD600;font-weight:bold;">Google Mapsで開く</a>
+        <div style="margin:18px 0 0 0;">
+          <div style="color:#FFD600;font-weight:bold;margin-bottom:6px;">SNSでシェア</div>
+          <button class="region-btn" style="background:#E1306C;color:#fff;margin:0 4px 8px 0;" onclick="alert('Instagramは画像保存後、アプリからシェアしてください。')">Instagram</button>
+          <a class="region-btn" style="background:#1DA1F2;color:#fff;margin:0 4px 8px 0;display:inline-block;text-decoration:none;" href="${shareUrlX}" target="_blank">X（旧Twitter）</a>
+          <a class="region-btn" style="background:#4267B2;color:#fff;margin:0 4px 8px 0;display:inline-block;text-decoration:none;" href="${shareUrlFB}" target="_blank">Facebook</a>
+        </div>
+        <div style="margin:32px 0 0 0; padding:16px; background:#FFFDE7; border-radius:12px; box-shadow:0 2px 8px rgba(255,221,51,0.07);">
+          <div style="color:#FFD600;font-weight:bold;margin-bottom:8px;font-size:1.1em;">レビュー</div>
+          <form id="reviewForm" style="margin-bottom:16px;">
+            <input type="text" name="name" placeholder="お名前" style="width:30%;margin-right:8px;padding:6px;border-radius:6px;border:1px solid #FFD600;">
+            <input type="text" name="comment" placeholder="コメント" style="width:35%;margin-right:8px;padding:6px;border-radius:6px;border:1px solid #FFD600;">
+            <select name="rating" style="width:18%;padding:6px;border-radius:6px;border:1px solid #FFD600;">
+              <option value="5">★★★★★</option>
+              <option value="4">★★★★☆</option>
+              <option value="3">★★★☆☆</option>
+              <option value="2">★★☆☆☆</option>
+              <option value="1">★☆☆☆☆</option>
+            </select>
+            <button type="submit" class="region-btn" style="margin-left:8px;">投稿</button>
+          </form>
+          <div id="reviewList">
+            ${reviews.length === 0 ? '<div>まだレビューはありません。</div>' :
+              reviews.map((r, i) => `
+                <div style="margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #eee;position:relative;">
+                  <span style="font-weight:bold;">${r.name}</span> <span style="color:#888;font-size:0.9em;">${r.date}</span>
+                  <span style="position:absolute;top:0;right:0;cursor:pointer;color:#FFD600;font-size:1.2em;" onclick="deleteReviewAndRerender('${spot.name}',${i})">×</span><br>
+                  <span>${renderStars(r.rating || 5)}</span><br>
+                  <span>${r.comment}</span>
+                </div>
+              `).join('')}
+          </div>
+        </div>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+        <button class="restart-btn" onclick="history.back()">前の画面に戻る</button>
+      `;
+      document.getElementById('reviewForm').onsubmit = function(e) {
+        e.preventDefault();
+        const name = this.name.value.trim() || '匿名';
+        const comment = this.comment.value.trim();
+        const rating = parseInt(this.rating.value, 10) || 5;
+        if (!comment) {
+          alert('コメントを入力してください');
+          return;
+        }
+        addReview(spot.name, name, comment, rating);
+        renderSpotDetail(spot);
+      };
+    }
+    window.toggleFavoriteAndRerenderDetail = function(spotName) {
+      toggleFavorite(spotName);
+      const spot = spots.find(s => s.name === spotName);
+      renderSpotDetail(spot);
+    };
+    window.deleteReviewAndRerender = function(spotName, index) {
+      deleteReview(spotName, index);
+      const spot = spots.find(s => s.name === spotName);
+      renderSpotDetail(spot);
+    };
+
+    // 季節選択画面
+    function renderSeasonSelect() {
+      app.innerHTML = `
+        <h1>季節で探す</h1>
+        <div style="margin-bottom:16px;">季節を選択してください</div>
+        <button class="region-btn" onclick="selectSeason('春')">春</button>
+        <button class="region-btn" onclick="selectSeason('夏')">夏</button>
+        <button class="region-btn" onclick="selectSeason('秋')">秋</button>
+        <button class="region-btn" onclick="selectSeason('冬')">冬</button>
+        <button class="region-btn" style="background:#FFD600;color:#333;" onclick="selectSeason(getCurrentSeason())">今の季節で探す</button>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+    }
+
+    function selectSeason(season) {
+      // seasons配列に含まれるスポットを抽出
+      const seasonSpots = spots.filter(s => Array.isArray(s.seasons) && s.seasons.includes(season));
+      app.innerHTML = `
+        <h1>${season}のおすすめスポット</h1>
+        ${seasonSpots.length === 0 ? '<div>該当するスポットはありません。</div>' :
+          '<ul class="near-list">' + seasonSpots.map(s => `
+            <li style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="showSpotDetailByName('${s.name.replace(/'/g, "\\'")}')">
+              <img src="${s.image}" alt="${s.name}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;box-shadow:0 1px 4px rgba(255,221,51,0.08);">
+              <span>${s.name}</span>
+            </li>
+          `).join('') + '</ul>'}
+        <button class="restart-btn" onclick="renderSeasonSelect()">季節選択に戻る</button>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+    }
+
+    // 4. getCurrentSeason関数を追加
+    function getCurrentSeason() {
+      const month = new Date().getMonth() + 1;
+      if ([3,4,5].includes(month)) return "春";
+      if ([6,7,8].includes(month)) return "夏";
+      if ([9,10,11].includes(month)) return "秋";
+      return "冬";
+    }
+
+    // お問い合わせ画面
+    function renderContact() {
+      app.innerHTML = `
+        <h1>CONTACT</h1>
+        <form id="contactForm" style="max-width:340px;margin:0 auto;text-align:left;">
+          <label>お名前<br><input type="text" name="name" style="width:100%;margin-bottom:12px;padding:8px;border-radius:6px;border:1px solid #FFD600;"></label><br>
+          <label>メールアドレス<br><input type="email" name="email" style="width:100%;margin-bottom:12px;padding:8px;border-radius:6px;border:1px solid #FFD600;"></label><br>
+          <label>お問い合わせ内容<br><textarea name="message" rows="5" style="width:100%;margin-bottom:16px;padding:8px;border-radius:6px;border:1px solid #FFD600;"></textarea></label><br>
+          <button type="submit" class="btn" style="width:100%;">送信</button>
+        </form>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+      document.getElementById('contactForm').onsubmit = function(e) {
+        e.preventDefault();
+        alert('お問い合わせありがとうございました！');
+        renderTop();
+      };
+    }
+
+    // AI Coming Soonページ
+    function renderAIComingSoon() {
+      app.innerHTML = `
+        <h1>AIに相談</h1>
+        <div style="margin:32px 0 16px 0;font-size:1.3em;font-weight:bold;color:#FFD600;">Coming soon...</div>
+        <div style="margin-bottom:16px;">AIとチャットで旅の相談ができる機能を準備中です。</div>
+        <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80" alt="AI相談イメージ" style="width:100%;max-width:320px;border-radius:12px;box-shadow:0 2px 8px rgba(255,221,51,0.10);">
+        <div style="margin-top:16px;font-size:0.97em;color:#888;">（イメージ画像）</div>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+    }
+
+    // 2. イベント特設ページ描画関数
+    function renderEventDetail(eventId) {
+      const event = events.find(e => e.id === eventId);
+      if (!event) {
+        app.innerHTML = `<div>イベントが見つかりません</div><button class="restart-btn" onclick="renderTop()">トップに戻る</button>`;
+        return;
+      }
+      app.innerHTML = `
+        <h1>${event.name}</h1>
+        <img src="${event.image}" alt="${event.name}" style="width:100%;max-width:340px;border-radius:12px;margin-bottom:16px;box-shadow:0 2px 8px rgba(255,221,51,0.10);">
+        <div style="margin-bottom:8px;color:#666;">${event.startDate && event.endDate ? `${event.startDate} 〜 ${event.endDate}` : (event.date || '')}</div>
+        <div style="margin-bottom:8px;color:#666;">${event.place}</div>
+        <div style="margin-bottom:16px;">${event.description}</div>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+        <button class="restart-btn" onclick="history.back()">前の画面に戻る</button>
+      `;
+    }
+    window.renderEventDetail = renderEventDetail;
+
+    // すべてのイベントを表示する関数
+    function renderAllEvents() {
+      const sortedEvents = events.slice().sort((a, b) => {
+        const aStart = a.startDate ? new Date(a.startDate) : (a.date ? new Date(a.date) : null);
+        const bStart = b.startDate ? new Date(b.startDate) : (b.date ? new Date(b.date) : null);
+        return aStart - bStart;
+      });
+      app.innerHTML = `
+        <h1>すべてのイベント</h1>
+        <div style="margin:0 0 24px 0;">
+          ${sortedEvents.map(e => `
+            <div style=\"margin-bottom:24px; text-align:left;\">
+              <div style=\"font-weight:bold;font-size:1.08em;cursor:pointer;text-decoration:underline;\" onclick=\"renderEventDetail('${e.id}')\">${e.name}</div>
+              <div style=\"margin:4px 0 0 0; color:#666;\">${formatEventDate(e)}</div>
+              <div style=\"margin:2px 0 0 0; color:#666;\">${e.place}</div>
+              <div style=\"margin:8px 0 0 0;\">${e.description}</div>
+              ${e.image ? `<img src=\"${e.image}\" alt=\"${e.name}\" style=\"width:100%;max-width:320px;border-radius:8px;margin:10px 0 0 0;box-shadow:0 1px 4px rgba(255,221,51,0.08);cursor:pointer;\" onclick=\"renderEventDetail('${e.id}')\">` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+    }
+    window.renderAllEvents = renderAllEvents;
+
+    // About Usページ描画関数
+    function renderAboutUs() {
+      app.innerHTML = `
+        <h1>About Us</h1>
+        <div style="margin:24px 0 0 0; text-align:left; max-width:480px; margin-left:auto; margin-right:auto;">
+          <div style="font-weight:bold; font-size:1.1em; margin-bottom:12px;">私たちはSTART UP連携講義 Team8です！</div>
+          <div style="margin-bottom:18px;">
+            ユーザーの生活に彩りを。<br>
+            <span style="color:#FFD600;font-weight:bold;">DigTABI in HOKKAIDO</span>は、都市で生活する若者の皆さんが「癒やし」や「発見」を求める気持ちに寄り添いながら、まだ知られていない地方地域とつなぐ観光サービスです。<br>
+            あなたの毎日に、ちょっとした豊かさとワクワクをお届けします。
+          </div>
+          <div style="margin-bottom:18px;">
+            地域にスポットライトを。<br>
+            私たちは「観光資源が隠れているまち」に人を集めることで、交流人口・関係人口の創出をめざします。<br>
+            <span style="color:#FFD600;font-weight:bold;">DigTABI in HOKKAIDO</span>は、「光が当たっていない地域」と「癒しや発見を求めている人」をつなぐ"共感型観光マッチングサービス"です。
+          </div>
+          <div style="margin-bottom:18px;">
+            都市も、地方も、北海道全体を元気に。<br>
+            そんな思いで、私たちTeam8は活動しています。
+          </div>
+        </div>
+        <button class="restart-btn" onclick="renderTop()">トップに戻る</button>
+      `;
+    }
+    window.renderAboutUs = renderAboutUs;
+
+    // 検索バーの検索処理
+    window.searchSpots = function() {
+      const keyword = document.getElementById('searchInput').value.trim();
+      const resultDiv = document.getElementById('searchResult');
+      if (!keyword) {
+        resultDiv.innerHTML = '';
+        return;
+      }
+      const results = spots.filter(s => s.name.includes(keyword));
+      if (results.length === 0) {
+        resultDiv.innerHTML = '<div style="color:#888;">該当するスポットはありません。</div>';
+        return;
+      }
+      resultDiv.innerHTML = '<ul class="near-list">' + results.map(s => `<li onclick="showSpotDetailByName('${s.name.replace(/'/g, "\\'")}')">${s.name}</li>`).join('') + '</ul>';
+    }
+
+    // 初期表示
+    renderTop();
+
+    // body直下にヘッダー・フッターを追加
+    const body = document.body;
+    const header = document.createElement('div');
+    header.className = 'header';
+    header.innerHTML = `
+      <div class="header-nav">
+        <button class="header-nav-btn" onclick="renderTop()">DigTABI in HOKKAIDO</button>
+        <button class="header-nav-btn" onclick="selectMode('quiz')">気分で探す</button>
+        <button class="header-nav-btn" onclick="selectMode('region')">地域で探す</button>
+        <button class="header-nav-btn" onclick="renderSeasonSelect()">季節で探す</button>
+        <button class="header-nav-btn" onclick="renderAllEvents()">イベント</button>
+        <button class="header-nav-btn" onclick="renderFavorites()">お気に入り</button>
+        <button class="header-nav-btn" onclick="renderContact()">CONTACT</button>
+      </div>
+    `;
+    body.insertBefore(header, body.firstChild);
+
+    const footer = document.createElement('div');
+    footer.className = 'footer';
+    footer.innerHTML = `
+      <div style="font-weight:bold;">Team8</div>
+      <div>TEL:070-1646-5662</div>
+      <div>Mail:yamashita.yuya.d6@elms.hokudai.ac.jp</div>
+      <div style="margin-top:8px;">
+        <span class="footer-link" onclick="renderContact()">CONTACT</span> |
+        <span class="footer-link" onclick="renderAboutUs()">About Us</span>
+      </div>
+    `;
+    body.appendChild(footer);
+
+    // スクロールでヘッダー表示制御
+    let lastScrollY = window.scrollY;
+    window.addEventListener('scroll', function() {
+      const currentY = window.scrollY;
+      if (currentY > 60 && currentY > lastScrollY) {
+        // 下方向スクロール時に表示
+        header.classList.add('show');
+      } else {
+        // 上方向やページトップで隠す
+        header.classList.remove('show');
+      }
+      lastScrollY = currentY;
+    });
+  </script>
+</body>
+</html>
